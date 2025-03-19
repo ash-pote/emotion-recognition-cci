@@ -2,99 +2,116 @@
 let line = document.querySelector(".theGreenLine");
 let pathLength = line.getTotalLength();
 
-let circle = document.querySelector(".circle");
-let circle2 = document.querySelector(".circle2");
-
 // Set up the initial stroke-dasharray and stroke-dashoffset for the path
 line.style.strokeDasharray = pathLength;
 line.style.strokeDashoffset = pathLength;
 
-// Animate the line immediately on page load
-anime({
-  targets: line,
-  strokeDashoffset: 0, // Immediately animate to full visibility
-  easing: "easeInOutQuad",
-  duration: 0, // No delay for the start, make it instant when the page loads
-});
+// Create an IntersectionObserver to detect when the line enters the screen
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        anime({
+          targets: line,
+          strokeDashoffset: 0,
+          easing: "easeInOutQuad",
+          duration: 20000,
+        });
+        observer.unobserve(line); // Stop observing after animation starts
+      }
+    });
+  },
+  { threshold: 1 } // Increase threshold to 80%
+);
 
-// Track last scroll position
+// Start observing the line element
+observer.observe(line);
+
+// Track last scroll position for scroll-based animation
 let lastScrollY = window.scrollY;
 
-// Triggering the scroll event
+// Triggering the scroll event for the line animation
+let scrollThreshold = 0.002; // Start animation after 20% scroll
+
 window.addEventListener("scroll", function () {
   let scrollPercent =
-    window.scrollY / (document.body.scrollHeight - window.innerHeight);
-  let progressAction = Math.min(Math.max(scrollPercent, 0), 1); // Clamping value between 0 and 1
+    window.scrollY /
+    (document.documentElement.scrollHeight - window.innerHeight);
 
-  // Animate stroke-dashoffset based on scroll position
+  // Ensure animation only starts after reaching the threshold
+  let adjustedScrollPercent = Math.max(
+    (scrollPercent - scrollThreshold) / (1 - scrollThreshold),
+    0
+  );
+
+  let progressAction = Math.min(Math.max(adjustedScrollPercent, 0), 1); // Clamp value between 0 and 1
+
   anime({
     targets: line,
     strokeDashoffset: pathLength - progressAction * pathLength,
     easing: "linear",
-    duration: 50, // Smoothing the animation during scroll
+    duration: 5, // Smooth animation update
   });
+});
 
-  // Track scroll direction
-  let circleProgress = progressAction * pathLength;
+/* Animate circles with scrolltrigger */
 
-  // Animation for the first circle
-  if (window.scrollY > lastScrollY) {
-    // If scrolling down, trigger circle animation when it reaches specific progress
-    if (circleProgress > 200 && circleProgress < 500) {
-      anime({
-        targets: circle,
-        opacity: 1,
-        r: 20, // Circle grows bigger
-        easing: "easeOutQuad",
-        duration: 500,
-      });
-    } else {
-      anime({
-        targets: circle,
-        opacity: 0,
-        r: 5, // Reset circle size
-        easing: "easeOutQuad",
-        duration: 500,
-      });
-    }
+// GSAP animation for the circle
+gsap.utils.toArray(".circle").forEach(function (circle) {
+  gsap.to(circle, {
+    scrollTrigger: {
+      trigger: circle, // The trigger is the current `.circle` element
+      start: "top 90%", // Trigger animation when the circle is 70% down the viewport
+      end: "top 0%", // End the animation when the circle reaches 0% of the viewport
+      scrub: false, // Disable scrubbing for smoother animation
+      markers: false, // Optional: Shows markers for debugging
+      onEnter: () => {
+        gsap.set(circle, { transformOrigin: "center center" });
+        // Animation when the `.circle` enters the viewport
+        gsap.to(circle, {
+          scale: 200, // Animate the circle to double its size (200%)
+          opacity: 1, // Make the circle visible
+          ease: "power1.out", // Easing for smooth scaling
+          duration: 1, // Duration of the animation
+        });
+      },
+      onLeaveBack: () => {
+        // Reverse animation when scrolling up (leaving viewport)
+        gsap.to(circle, {
+          scale: 0, // Scale back to 0 (hidden again)
+          opacity: 0, // Fade out the circle
+          ease: "power1.in", // Easing for smooth reverse
+          duration: 1, // Duration of the reverse animation
+        });
+      },
+    },
+  });
+});
 
-    // Animation for the second circle
-    if (circleProgress > 550 && circleProgress < 950) {
-      anime({
-        targets: circle2,
-        opacity: 1,
-        r: 20, // Circle grows bigger
-        easing: "easeOutQuad",
-        duration: 500,
-      });
-    } else {
-      anime({
-        targets: circle2,
-        opacity: 0,
-        r: 5, // Reset circle size
-        easing: "easeOutQuad",
-        duration: 500,
-      });
-    }
-  } else {
-    // If scrolling up, reset circle to initial state
-    anime({
-      targets: circle,
-      opacity: 0,
-      r: 5, // Reset circle size and opacity when scrolling up
-      easing: "easeOutQuad",
-      duration: 1000,
-    });
-
-    anime({
-      targets: circle2,
-      opacity: 0,
-      r: 5, // Reset circle size and opacity when scrolling up
-      easing: "easeOutQuad",
-      duration: 1000,
-    });
-  }
-
-  // Update last scroll position
-  lastScrollY = window.scrollY;
+gsap.utils.toArray(".text-fade").forEach(function (text) {
+  gsap.to(text, {
+    scrollTrigger: {
+      trigger: text, // The trigger is the current `.text-fade` element
+      start: "top 50%", // Trigger animation when the element is 45% down the viewport
+      end: "top 0%", // End the animation when the element reaches 0% of the viewport
+      scrub: false, // Disable scrubbing for smoother animation
+      markers: false, // Optional: Shows markers for debugging
+      onEnter: () => {
+        // Animation when the `.text-fade` enters the viewport
+        gsap.to(text, {
+          opacity: 1, // Make the text visible
+          ease: "power1.out", // Easing for smooth fade-in
+          duration: 2.5, // Duration of the animation
+        });
+      },
+      onLeaveBack: () => {
+        // Reverse animation when scrolling up (leaving viewport)
+        gsap.to(text, {
+          opacity: 0, // Fade out the text
+          ease: "power1.in", // Easing for smooth reverse
+          duration: 1, // Duration of the reverse animation
+        });
+      },
+    },
+  });
 });
