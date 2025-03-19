@@ -15,43 +15,42 @@ const observer = new IntersectionObserver(
           targets: line,
           strokeDashoffset: 0,
           easing: "easeInOutQuad",
-          duration: 20000,
+          duration: 1500,
         });
         observer.unobserve(line); // Stop observing after animation starts
       }
     });
   },
-  { threshold: 1 } // Increase threshold to 80%
+  { threshold: 1 } // Lower threshold to trigger earlier
 );
 
 // Start observing the line element
 observer.observe(line);
 
-// Track last scroll position for scroll-based animation
-let lastScrollY = window.scrollY;
+// Track position of the line relative to viewport
+let lineTop = line.getBoundingClientRect().top + window.scrollY;
+let triggerPoint = lineTop - 300; // Adjust trigger point
 
-// Triggering the scroll event for the line animation
-let scrollThreshold = 0.002; // Start animation after 20% scroll
-
+// Scroll-based animation for gradual stroke reveal
 window.addEventListener("scroll", function () {
-  let scrollPercent =
-    window.scrollY /
-    (document.documentElement.scrollHeight - window.innerHeight);
+  let scrollY = window.scrollY;
 
-  // Ensure animation only starts after reaching the threshold
-  let adjustedScrollPercent = Math.max(
-    (scrollPercent - scrollThreshold) / (1 - scrollThreshold),
-    0
-  );
+  if (scrollY >= triggerPoint) {
+    let scrollPercent =
+      (scrollY - triggerPoint) /
+      (document.documentElement.scrollHeight -
+        triggerPoint -
+        window.innerHeight);
 
-  let progressAction = Math.min(Math.max(adjustedScrollPercent, 0), 1); // Clamp value between 0 and 1
+    let progressAction = Math.min(Math.max(scrollPercent, 0), 1); // Clamp between 0-1
 
-  anime({
-    targets: line,
-    strokeDashoffset: pathLength - progressAction * pathLength,
-    easing: "linear",
-    duration: 5, // Smooth animation update
-  });
+    anime({
+      targets: line,
+      strokeDashoffset: pathLength - progressAction * pathLength,
+      easing: "linear",
+      duration: 50, // Smooth animation updates
+    });
+  }
 });
 
 /* Animate circles with scrolltrigger */
@@ -72,7 +71,7 @@ gsap.utils.toArray(".circle").forEach(function (circle) {
           scale: 200, // Animate the circle to double its size (200%)
           opacity: 1, // Make the circle visible
           ease: "power1.out", // Easing for smooth scaling
-          duration: 1, // Duration of the animation
+          duration: 2, // Duration of the animation
         });
       },
       onLeaveBack: () => {
@@ -92,7 +91,7 @@ gsap.utils.toArray(".text-fade").forEach(function (text) {
   gsap.to(text, {
     scrollTrigger: {
       trigger: text, // The trigger is the current `.text-fade` element
-      start: "top 50%", // Trigger animation when the element is 45% down the viewport
+      start: "top 65%", // Trigger animation when the element is 45% down the viewport
       end: "top 0%", // End the animation when the element reaches 0% of the viewport
       scrub: false, // Disable scrubbing for smoother animation
       markers: false, // Optional: Shows markers for debugging

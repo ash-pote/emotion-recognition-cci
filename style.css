@@ -8,6 +8,10 @@ svg {
   top: 0vh;
 }
 
+.text-fade {
+  opacity: 0;
+}
+
 .p-1,
 .p-2,
 .p-3,
@@ -46,13 +50,13 @@ svg {
 }
 
 .p-6 {
-  top: 4150px;
-  left: 40px;
+  top: 700vh;
+  left: 2vw;
 }
 
 .p-7 {
-  top: 4560px;
-  right: 40px;
+  top: 770vh;
+  right: 4vw;
 }
 
 .further,
